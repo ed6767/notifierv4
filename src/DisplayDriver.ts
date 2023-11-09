@@ -16,18 +16,35 @@ export default class DisplayDriver {
         this.port?.write(Buffer.from([DisplayCommandStarter, command]));
     }
 
+    public async writeToDisplay(textLine1: string, textLine2: string) {
+
+    }
+
     public async connect() {
         const ports = await SerialPort.list();
-        const port = ports[0].path;
+        
+        // Select where productId is 7523 and vendorId is 1a86 (CH340 serial converter)
+        const port = ports.find(p => p.productId === "7523" && p.vendorId === "1a86");
+
+        // If no port was found, throw an error
+        if (!port) {
+            throw new Error("No display found");
+        }
+
         this.port = new SerialPort({
-            path: port,
+            path: port.path,
             baudRate: 500000,
             dataBits: 8,
         });
 
+        // Wait two seconds for the display to boot up
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         this.sendCommand(DisplayCommand.ClearDisplay);
 
+        this.sendCommand(DisplayCommand.NextLine);
+
         // Write some text to the display
-        this.port?.write("Hello, world!");
+        this.port?.write("i luv eddie <3");
     }
 }
